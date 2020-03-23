@@ -36,7 +36,7 @@ void MorseCode::send(char asciiCharacter) {
   }
 }
 
-// Sends the morse code character. Retursn true if the Morse character was sent
+// Sends the morse code character. Returns true if the Morse character was sent
 // or false when there is no equivalent Morse character.
 //
 // The character is encoded in a single byte with 0 representing a dot and 1

@@ -3,7 +3,7 @@
 
 // The message to be sent. Must be an ASCII string. Not all characters in 
 // ASCII exist in Morse-code. Those that don't exist won't be sent.
-String messageToSend = String("SOS ");
+String messageToSend = String("OSO ");
 
 // The length of a timing unit in milliseconds. Determines the speed of 
 // transmission of the code.
