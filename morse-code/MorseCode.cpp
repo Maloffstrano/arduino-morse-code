@@ -6,8 +6,8 @@
 
 #include "MorseCode.h"
 
-// Construct a Morse code class that will signal based on the timing unit
-// specified, in milliseconds.
+// Construct a Morse code class that will send Morse code characters for
+// ASCII characters based on the timing unit specified, in milliseconds.
 MorseCode::MorseCode(int morseTimingUnitMs, Signal *signaller) { 
   // Morse code timing.
   // See: http://www.codebug.org.uk/learn/step/541/morse-code-timing-rules/
@@ -15,8 +15,8 @@ MorseCode::MorseCode(int morseTimingUnitMs, Signal *signaller) {
   delayBetweenLettersMs = 3 * morseTimingUnitMs;
   delayBetweenWordsMs   = 7 * morseTimingUnitMs;
   
-  symbolDurationDotMs     = morseTimingUnitMs;
-  symbolDurationDashMs    = 3 * morseTimingUnitMs;
+  morseSymbolDuration[symbolDot] = morseTimingUnitMs;
+  morseSymbolDuration[symbolDash] = 3 * morseTimingUnitMs;
 
   signal = signaller;
 }
@@ -25,15 +25,18 @@ MorseCode::~MorseCode() { /* nothing to destruct */ }
 
 // Send the asciiCharacter to the signaller as morse code.
 void MorseCode::send(char asciiCharacter) {
-  // ensure legal ASCII
-  asciiCharacter == asciiCharacter & asciiCharacterMask;
+  asciiCharacter = ensureLegalAscii(asciiCharacter);
 
   if (asciiCharacter == asciiSpace) {
     delay(delayBetweenWordsMs);
   } else {
     byte morseCharacter = asciiToMorseLookup[asciiCharacter];
-    sendMorse(morseCharacter);
+    sendMorseCharacter(morseCharacter);
   }
+}
+
+char MorseCode::ensureLegalAscii(char asciiCharacter) {
+  return asciiCharacter & asciiCharacterMask;
 }
 
 // Sends the morse code character. Returns true if the Morse character was sent
@@ -41,76 +44,79 @@ void MorseCode::send(char asciiCharacter) {
 //
 // The character is encoded in a single byte with 0 representing a dot and 1
 // representing a dash. Morse code is variable length. To properly encode a
-// variable length character with only two unique values, the Morse code is
-// padding with an opposite bit to that of the first symbol bit. 
+// variable length character with only two unique values, 0 & 1, the Morse code 
+// is padded with an opposite bit to that of the first symbol bit. 
 //
 // Two examples:
 //
 // Morse letter A is dot-dash (.-) represented as bits 01. The first symbol is
 // a dot (0) so the remainder of the byte is padded with 1 to indicate
-// discard those bits until a 0 (dot) is found, and send that and remaining 
-// bits .
+// discard those bits until a 0 (dot) is found. Send the remaining symbols.
 //
 // Morse letter B is dash-dot-dot-dot (-...) represented as bits 1000. The first
 // symbol is dash (1) so the remainder of the byte is padded with 0 to indicate
-// discard those bits until a 1 (dash) is found, and send the that and remaining
-// bits.
+// discard those bits until a 1 (dash) is found. Send the remaining symbols.
 //
 // Bit-76543210                            Bit-76543210
 //     ------01 Morse letter A .-              ----1000 Morse letter B -...
 //     11111101 padded Morse letter A          00001000 padded Morse letter B
 
-boolean MorseCode::sendMorse(byte morseCharacter) {
-  byte morseSymbolCounter = numberOfBitsPerByte;
-  
-  byte symbolToFind = identifyMorseStartingSymbol(morseCharacter);
+boolean MorseCode::sendMorseCharacter(byte morseCharacter) {
+  byte morseSymbolMask = skipPaddingBits(morseCharacter);
 
-  byte currentSymbol;
-  
-  // Skip padding bits
-  while (--morseSymbolCounter) {
-    currentSymbol = nextMorseSymbol(&morseCharacter);
-    if (symbolToFind == currentSymbol) {
-      break;
-    }
-  }
-
-  if (morseSymbolCounter == 0) {
+  if (morseSymbolMask == 0) {
     return false;
   }
 
-  // Send Morse symbols
-  sendMorseSymbol(currentSymbol);
-  while (--morseSymbolCounter) {
-    currentSymbol = nextMorseSymbol(&morseCharacter);
-    sendMorseSymbol(currentSymbol);
-  }
+  sendMorseSymbols(morseSymbolMask, morseCharacter);
 
   return true;
 }
 
+// Skips over the padding bits of paddedMorseCharacter and returns a 
+// mask with a lone set bit positioned at the first symbol of the 
+// Morse character to send.
+byte MorseCode::skipPaddingBits(byte paddedMorseCharacter) {
+  byte morseSymbolMask = morseCharacterStartingSymbolMask;
+  byte paddingSymbol = decodeCurrentSymbol(morseSymbolMask, paddedMorseCharacter);
+
+  // Loop ends when the lone mask bit is shifted out and value falls to zero.
+  while (morseSymbolMask) {
+    morseSymbolMask = morseSymbolMask >> 1;
+    byte currentSymbol = decodeCurrentSymbol(morseSymbolMask, paddedMorseCharacter);
+    if (paddingSymbol != currentSymbol) {
+      break;
+    }
+  }
+
+  return morseSymbolMask;
+}
+
+
+// Sends all the Morse symbols of morseCharacter starting at the 
+// current morseSymbolMask. The mask is a single set bit identifying 
+// the next Morse symbol to send.
+void MorseCode::sendMorseSymbols(byte morseSymbolMask, byte morseCharacter) {
+  // Loop ends when the lone mask bit is shifted out and value falls to zero.
+  while (morseSymbolMask) {
+    byte currentSymbol = decodeCurrentSymbol(morseSymbolMask, morseCharacter);
+    sendMorseSymbol(currentSymbol);
+    morseSymbolMask = morseSymbolMask >> 1;
+  }
+}
+
+// Returns either symbolDash or symbolDot depending on the 
+// morseCharacter symbol referenced by the morseSymbolMask.
+byte MorseCode::decodeCurrentSymbol(byte morseSymbolMask, byte morseCharacter) {
+  return ((morseCharacter & morseSymbolMask) ? symbolDash : symbolDot);
+}
+
+// Sends a Morse symbol via the current signaller.
 void MorseCode::sendMorseSymbol(byte morseSymbol) {
   signal->on();
-  delay(morseSymbolDuration(morseSymbol));
+  delay(morseSymbolDuration[morseSymbol]);
   signal->off();
   delay(delayBetweenSymbolsMs);  
-}
-
-int MorseCode::morseSymbolDuration(byte morseSymbol) {
-  return (morseSymbol == symbolDot) ? symbolDurationDotMs : symbolDurationDashMs;
-}
-
-// Return the Morse symbol (symbolDot or symbolDash) that begins the Morse
-// character within the padded Morse Character.
-byte MorseCode::identifyMorseStartingSymbol(byte paddedMorseCharacter) {
-  return ((paddedMorseCharacter & morseCharacterSymbolMask) ? symbolDot : symbolDash);
-}
-
-// _Destructively_ return the next Morse symbol (symbolDot or symbolDash) from 
-// the Morse character.
-byte MorseCode::nextMorseSymbol(byte *morseCharacter) {
-  *morseCharacter = *morseCharacter << 1;
-  return ((*morseCharacter & morseCharacterSymbolMask) ? symbolDash : symbolDot);
 }
 
 // Array that maps the first 128 ASCII characters to their Morse code

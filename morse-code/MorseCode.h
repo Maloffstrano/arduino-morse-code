@@ -17,32 +17,30 @@ class MorseCode {
     void send(char asciiCharacter);
 
   private:
-    Signal *signal;
+    Signal *signal; // The class used to emit a Morse symbol.
         
     const byte symbolDot  = 0;
     const byte symbolDash = 1;
     
-    const byte morseCharacterSymbolMask = B10000000;
+    const byte morseCharacterStartingSymbolMask = B10000000;
     const byte asciiCharacterMask = B01111111;
     
-    const byte numberOfBitsPerByte = 8;
-
     const byte asciiSpace = 32;
 
-    int delayBetweenSymbolsMs;
+    int delayBetweenSymbolsMs; // Calculated on instantiation
     int delayBetweenLettersMs;
     int delayBetweenWordsMs;  
-    int symbolDurationDotMs;
-    int symbolDurationDashMs;
+    int morseSymbolDuration[2];
+
+    boolean sendMorseCharacter(byte morseCharacter);
+    void sendMorseSymbols(byte morseSymbolMask, byte morseCharacter);
+    void sendMorseSymbol(byte morseSymbol);
+    byte skipPaddingBits(byte paddedMorseCharacter);
+    byte decodeCurrentSymbol(byte morseSymbolMask, byte morseCharacter);
+    char ensureLegalAscii(char asciiCharacter);
 
     static byte asciiToMorseLookup[];
-
-    boolean sendMorse(byte morseCharacter);
-    void sendMorseSymbol(byte morseSymbol);
-    int morseSymbolDuration(byte morseSymbol);
-    byte identifyMorseStartingSymbol(byte paddedMorseCharacter);
-    byte nextMorseSymbol(byte *morseCharacter);
-
+    
 };
  
 #endif
