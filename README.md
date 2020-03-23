@@ -2,7 +2,7 @@
 Send morse code on the built-in LED of an Arduino.
 
 ## What this is about
-|My experiment in writing modular code C++ for an Arduino-like chip, the Digispark Tiny85. These are available for less than $2 on some sites, and can be programmed through USB. The one pictured can actually slide directly into a USB-A slot, eliminating a cable.|![DigiSpark Tiny85](https://user-images.githubusercontent.com/6452623/77364177-a189e400-6d19-11ea-997f-fc622738a7b1.jpeg)|
+|My experiment in writing modular C++ code for an Arduino-like chip, the Digispark Tiny85. These are available for less than $2 on some sites, and can be programmed through USB. The one pictured can actually slide directly into a USB-A slot, eliminating a cable.|![DigiSpark Tiny85](https://user-images.githubusercontent.com/6452623/77364177-a189e400-6d19-11ea-997f-fc622738a7b1.jpeg)|
 |:---|:---:|
 
 
