@@ -14,7 +14,10 @@ MorseCode::MorseCode(int morseTimingUnitMs, Signal *signaller) {
   delayBetweenSymbolsMs = morseTimingUnitMs;
   delayBetweenLettersMs = 3 * morseTimingUnitMs;
   delayBetweenWordsMs   = 7 * morseTimingUnitMs;
-  
+
+  // While learning Morse code, uncomment this line to put space between the symbols.
+  // delayBetweenSymbolsMs = 2 * morseTimingUnitMs; 
+
   morseSymbolDuration[symbolDot] = morseTimingUnitMs;
   morseSymbolDuration[symbolDash] = 3 * morseTimingUnitMs;
 
