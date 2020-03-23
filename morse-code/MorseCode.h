@@ -1,22 +1,24 @@
-#ifndef MORSE_CODE_H
-#define MORSE_CODE_H
- 
+/*
+  MorseCode.h - Library for signaling Morse code.
+  Created by Maloffstrano, March 2020.
+  Released into the public domain.
+*/
+
+#ifndef MorseCode_H
+#define MorseCode_H
+
+#include "signal.h"
 #include <Arduino.h>
  
 class MorseCode {
   public:
-    MorseCode(int morseTimingUnitMs);
+    MorseCode(int morseTimingUnitMs, Signal *signaller);
     ~MorseCode();
     void send(char asciiCharacter);
 
-    // THESE TO BE MOVED TO ANOTHER CLASS
-    void signalOn();
-    void signalOff();
-    void signalSetup();
-
   private:
-    const int ledPin = 1;
-    
+    Signal *signal;
+        
     const byte symbolDot  = 0;
     const byte symbolDash = 1;
     

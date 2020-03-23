@@ -6,7 +6,9 @@
 
 #include "MorseCode.h"
 
-MorseCode::MorseCode(int morseTimingUnitMs) { 
+// Construct a Morse code class that will signal based on the timing unit
+// specified, in milliseconds.
+MorseCode::MorseCode(int morseTimingUnitMs, Signal *signaller) { 
   // Morse code timing.
   // See: http://www.codebug.org.uk/learn/step/541/morse-code-timing-rules/
   delayBetweenSymbolsMs = morseTimingUnitMs;
@@ -15,12 +17,15 @@ MorseCode::MorseCode(int morseTimingUnitMs) {
   
   symbolDurationDotMs     = morseTimingUnitMs;
   symbolDurationDashMs    = 3 * morseTimingUnitMs;
+
+  signal = signaller;
 }
 
 MorseCode::~MorseCode() { /* nothing to destruct */ }
 
+// Send the asciiCharacter to the signaller as morse code.
 void MorseCode::send(char asciiCharacter) {
-  // mask it to legal ASCII of 0 to 128, just in case
+  // ensure legal ASCII
   asciiCharacter == asciiCharacter & asciiCharacterMask;
 
   if (asciiCharacter == asciiSpace) {
@@ -31,8 +36,7 @@ void MorseCode::send(char asciiCharacter) {
   }
 }
 
-//------------------------------------------------------------------------------
-// Sends the morse code character return true if the Morse character was sent
+// Sends the morse code character. Returns true if the Morse character was sent
 // or false when there is no equivalent Morse character.
 //
 // The character is encoded in a single byte with 0 representing a dot and 1
@@ -86,9 +90,9 @@ boolean MorseCode::sendMorse(byte morseCharacter) {
 }
 
 void MorseCode::sendMorseSymbol(byte morseSymbol) {
-  signalOn();
+  signal->on();
   delay(morseSymbolDuration(morseSymbol));
-  signalOff();
+  signal->off();
   delay(delayBetweenSymbolsMs);  
 }
 
@@ -109,28 +113,12 @@ byte MorseCode::nextMorseSymbol(byte *morseCharacter) {
   return ((*morseCharacter & morseCharacterSymbolMask) ? symbolDash : symbolDot);
 }
 
-// THESE TO BE MOVED TO ANOTHER CLASS
-
-// Turn on the signal. Override to change the type of signal.
-void MorseCode::signalOn() {
-  digitalWrite(ledPin, HIGH);
-}
-
-// Turn off the signal. Override to change the type of signal.
-void MorseCode::signalOff() {
-  digitalWrite(ledPin, LOW);
-}
-
-// Setup the signal. Override to change the type of signal.
-void MorseCode::signalSetup() {
-  pinMode(ledPin, OUTPUT);
-}
-
 // Array that maps the first 128 ASCII characters to their Morse code
 // equivalents. Number 0 indicates no equivalent and will not be sent.
 //
 // See: https://morsecode0world/international/morse20html
-// See: sendMorse() function for an explanation of the bit format
+// See: sendMorse() method for an explanation of the bit format
+
 byte MorseCode::asciiToMorseLookup[] {
 // 76543210 --- bit position                                        
   B0,        // Null char - NUL 

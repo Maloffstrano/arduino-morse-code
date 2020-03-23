@@ -1,3 +1,4 @@
+#include "Signal.h"
 #include "MorseCode.h"
 
 // The message to be sent. Must be an ASCII string. Not all characters in 
@@ -8,29 +9,23 @@ String messageToSend = String("OSO ");
 // transmission of the code.
 const int morseTimingUnitMs = 150;
 
-
 const int digisparkModelA = 1;
 const int digisparkModelB = 0;
 
 // Choose the model of DigiSpark you have.
 const int ledPin = digisparkModelA;
 
-
-
-
-//------------------------------------------------------------------------------
-
-MorseCode morseCode(morseTimingUnitMs);
+Signal led(ledPin);
+MorseCode morseCode(morseTimingUnitMs, &led);
 
 // setup() routine runs once when you press reset or when you plug a DigiSpark 
 // into the USB port.
 void setup() {
-  morseCode.signalSetup(); // This is not morseCode's concern, to be fixed.
+  /* nothing to setup */
 }
 
-// loop() runs repeated after setup.
+// loop() runs repeatedly after setup().
 void loop() {
-  // The first cut of code is really dirty. Written as a single linear function.
   int messageLength = messageToSend.length();
   
   for (int characterIndex = 0; characterIndex < messageLength; characterIndex++) {
